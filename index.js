@@ -1,9 +1,13 @@
- // Get the canvas element and its 2D rendering context
+const FPS_TARGET = 60;
+const FPS_INTERVAL = 1000 / FPS_TARGET;
+
+// Get the canvas element and its 2D rendering context
 const canvas = document.getElementById('backgroundCanvas');
 const ctx = canvas.getContext('2d');
 
 let animationFrameId; // To store the requestAnimationFrame ID for cleanup
-let totalRenderedPixelsWidth = 0;
+let previousRenderTime;
+let totalRenderedTilesWidth = 0;
 let scrollOffset = 0;
 const spritesToRender = [];
 
@@ -40,19 +44,19 @@ function drawCanvasContent() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     for (const sprite of spritesToRender) {
-        ctx.drawImage(sprite.image, sprite.x - scrollOffset, sprite.y);
+        ctx.drawImage(sprite.image, (sprite.x * 32) - scrollOffset, sprite.y * 32);
     }
     scrollOffset++;
 
-    if (totalRenderedPixelsWidth - scrollOffset < canvas.width) {
+    if ((totalRenderedTilesWidth * 32) - scrollOffset < canvas.width) {
         const grass_1 = document.getElementById('sprite_grass_1');
         const grass_2 = document.getElementById('sprite_grass_2');
         const grass_3 = document.getElementById('sprite_grass_3');
         const grass_4 = document.getElementById('sprite_grass_4');
         const grassSprites = [grass_1, grass_2, grass_3, grass_4];
         const grassToDraw = grassSprites[getRandomInt(4)];
-        spritesToRender.push({ image: grassToDraw, x: totalRenderedPixelsWidth, y: canvas.height - 200 });
-        totalRenderedPixelsWidth += 32;
+        spritesToRender.push({ image: grassToDraw, x: totalRenderedTilesWidth, y: 32 });
+        totalRenderedTilesWidth++;
     }
 }
 
@@ -61,7 +65,13 @@ function drawCanvasContent() {
  * You can add more complex animation logic here.
  */
 function animate() {
-    drawCanvasContent(); // Redraw canvas content each frame
+    const currentRenderTime = Date.now();
+    const elapsedRenderTime = currentRenderTime - previousRenderTime;
+
+    if (elapsedRenderTime > FPS_INTERVAL) {
+        previousRenderTime = currentRenderTime - (elapsedRenderTime % FPS_INTERVAL);
+        drawCanvasContent(); // Redraw canvas content each frame
+    }
     animationFrameId = requestAnimationFrame(animate); // Request next frame
 }
 
@@ -76,10 +86,11 @@ window.onload = function() {
     const grassSprites = [grass_1, grass_2, grass_3, grass_4];
     for (let i = 0; i < 20; i++) {
         const grassToDraw = grassSprites[getRandomInt(4)];
-        spritesToRender.push({ image: grassToDraw, x: i*32, y: canvas.height - 200 });
+        spritesToRender.push({ image: grassToDraw, x: i, y: 32 });
     }
-    totalRenderedPixelsWidth += 20 * 32;
+    totalRenderedTilesWidth += 20;
 
+    previousRenderTime = Date.now();
     animate(); // Start the animation loop
 };
 
