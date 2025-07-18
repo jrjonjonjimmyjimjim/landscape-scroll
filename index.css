@@ -1,0 +1,34 @@
+body {
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    overflow: hidden; /* Prevent scrollbars due to canvas */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh; /* Ensure body takes full viewport height */
+    position: relative; /* For positioning content above canvas */
+}
+
+/* Canvas styling to cover the entire background */
+#backgroundCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    z-index: -1; /* Place canvas behind other content */
+}
+
+/* Styling for the content container */
+.content-container {
+    position: relative;
+    z-index: 1; /* Ensure content is above the canvas */
+    background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent background for readability */
+    padding: 2rem;
+    border-radius: 0.75rem; /* Rounded corners */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    text-align: center;
+    max-width: 90%; /* Responsive width */
+    margin: 1rem; /* Margin for smaller screens */
+}
