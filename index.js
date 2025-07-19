@@ -88,11 +88,14 @@ function generateLandscapeBuffer(buffer) {
     const upslopeSprites = loadSpriteArray(['sprite_grass_upslope_1', 'sprite_grass_upslope_2']);
     const dirtSprites = loadSpriteArray(['sprite_dirt_1', 'sprite_dirt_2', 'sprite_dirt_3', 'sprite_dirt_4']);
     const plantSprites = loadSpriteArray(['sprite_flower_red_1', 'sprite_flower_red_2', 'sprite_flower_yellow_1', 'sprite_flower_yellow_2', 'sprite_flower_violet_1', 'sprite_flower_violet_2']);
+    const largePlantSprites = loadSpriteArray(['sprite_tree_dead_1', 'sprite_tree_dead_2']); // 4 tiles wide
     
+    let emptyGrassRequested = 0;
     for (let i = 0; i < tileColumnsToGenerate; i++) {
-        let dirtStartY = publicVars.groundY + 1
+        let dirtStartY = publicVars.groundY + 1;
         const changeGroundHeight = Math.random() < 0.25;
-        if (changeGroundHeight) {
+        // TODO: There's likely a more elegant way to force flat ground in subsequent loops
+        if (emptyGrassRequested === 0 && changeGroundHeight) {
             const stepUp = Math.random() < (0.5 + ((publicVars.groundY - CONSTANTS.GROUND_Y_TARGET) / 50));
             if (stepUp) {
                 const upslopeToDraw = getRandomArrayEntry(upslopeSprites);
@@ -105,11 +108,17 @@ function generateLandscapeBuffer(buffer) {
                 landscapeBufferRenderQueue.push({ image: downslopeToDraw, x: i, y: publicVars.groundY })
             }
         } else {
+            const placeLargePlant = Math.random() < 0.1;
+            if (emptyGrassRequested === 0 && tileColumnsToGenerate - i > 4 && placeLargePlant) {
+                const largePlantToDraw = getRandomArrayEntry(largePlantSprites);
+                landscapeBufferRenderQueue.push({ image: largePlantToDraw, x: i, y: publicVars.groundY - 15 });
+                emptyGrassRequested = 4;
+            }
             const grassToDraw = getRandomArrayEntry(grassSprites);
             landscapeBufferRenderQueue.push({ image: grassToDraw, x: i, y: publicVars.groundY });
 
             const placePlant = Math.random() < 0.1;
-            if (placePlant) {
+            if (emptyGrassRequested === 0 && placePlant) {
                 const plantToDraw = getRandomArrayEntry(plantSprites);
                 landscapeBufferRenderQueue.push({ image: plantToDraw, x: i, y: publicVars.groundY });
             }
@@ -118,6 +127,10 @@ function generateLandscapeBuffer(buffer) {
         for (let j = 0; j < dirtRowsToGenerate; j++) {
             const dirtToDraw = getRandomArrayEntry(dirtSprites);
             landscapeBufferRenderQueue.push({ image: dirtToDraw, x: i, y: dirtStartY + j });
+        }
+
+        if (emptyGrassRequested > 0) {
+            emptyGrassRequested -= 1;
         }
     }
     
