@@ -26,6 +26,14 @@ function getRandomArrayEntry(array) {
     return array[getRandomInt(array.length)];
 }
 
+function loadSpriteArray(spriteIds) {
+    const spriteArray = [];
+    for (let i = 0; i < spriteIds.length; i++) {
+        spriteArray.push(document.getElementById(spriteIds[i]));
+    }
+    return spriteArray;
+}
+
 function drawCanvasContent() {
     publicVars.canvasContext.clearRect(0, 0, publicVars.canvas.width, publicVars.canvas.height);
     
@@ -74,34 +82,12 @@ function generateLandscapeBuffers() {
 function generateLandscapeBuffer(buffer) {
     const landscapeBufferRenderQueue = [];
     const tileColumnsToGenerate = buffer.width / CONSTANTS.TILE_DIMENSION_IN_PIXELS;
-    
-    const grass1 = document.getElementById('sprite_grass_1');
-    const grass2 = document.getElementById('sprite_grass_2');
-    const grass3 = document.getElementById('sprite_grass_3');
-    const grass4 = document.getElementById('sprite_grass_4');
-    const grassSprites = [grass1, grass2, grass3, grass4];
 
-    const downslope1 = document.getElementById('sprite_grass_downslope_1');
-    const downslope2 = document.getElementById('sprite_grass_downslope_2');
-    const downslopeSprites = [downslope1, downslope2]; 
-
-    const upslope1 = document.getElementById('sprite_grass_upslope_1');
-    const upslope2 = document.getElementById('sprite_grass_upslope_2');
-    const upslopeSprites = [upslope1, upslope2];
-    
-    const dirt1 = document.getElementById('sprite_dirt_1');
-    const dirt2 = document.getElementById('sprite_dirt_2');
-    const dirt3 = document.getElementById('sprite_dirt_3');
-    const dirt4 = document.getElementById('sprite_dirt_4');
-    const dirtSprites = [dirt1, dirt2, dirt3, dirt4];
-
-    const redFlower1 = document.getElementById('sprite_flower_red_1');
-    const redFlower2 = document.getElementById('sprite_flower_red_2');
-    const yellowFlower1 = document.getElementById('sprite_flower_yellow_1');
-    const yellowFlower2 = document.getElementById('sprite_flower_yellow_2');
-    const violetFlower1 = document.getElementById('sprite_flower_violet_1');
-    const violetFlower2 = document.getElementById('sprite_flower_violet_2');
-    const plantSprites = [redFlower1, redFlower2, yellowFlower1, yellowFlower2, violetFlower1, violetFlower2];
+    const grassSprites = loadSpriteArray(['sprite_grass_1', 'sprite_grass_2', 'sprite_grass_3', 'sprite_grass_4']);
+    const downslopeSprites = loadSpriteArray(['sprite_grass_downslope_1', 'sprite_grass_downslope_2']);
+    const upslopeSprites = loadSpriteArray(['sprite_grass_upslope_1', 'sprite_grass_upslope_2']);
+    const dirtSprites = loadSpriteArray(['sprite_dirt_1', 'sprite_dirt_2', 'sprite_dirt_3', 'sprite_dirt_4']);
+    const plantSprites = loadSpriteArray(['sprite_flower_red_1', 'sprite_flower_red_2', 'sprite_flower_yellow_1', 'sprite_flower_yellow_2', 'sprite_flower_violet_1', 'sprite_flower_violet_2']);
     
     for (let i = 0; i < tileColumnsToGenerate; i++) {
         let dirtStartY = publicVars.groundY + 1
