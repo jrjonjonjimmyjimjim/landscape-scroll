@@ -1,5 +1,6 @@
 const CONSTANTS = {
     FPS_TARGET: 60,
+    SCROLL_SPEED: 1,
     TILE_DIMENSION_IN_PIXELS: 32,
     GROUND_Y_TARGET: 8,
 };
@@ -19,6 +20,10 @@ const publicVars = {
 
 function getRandomInt(max) {
   return Math.floor(Math.random() * max);
+}
+
+function getRandomArrayEntry(array) {
+    return array[getRandomInt(array.length)];
 }
 
 function drawCanvasContent() {
@@ -42,7 +47,7 @@ function animate() {
     if (elapsedRenderTime > CONSTANTS.FPS_INTERVAL) {
         publicVars.previousRenderTime = currentRenderTime - (elapsedRenderTime % CONSTANTS.FPS_INTERVAL);
         drawCanvasContent();
-        publicVars.scrollOffset--;
+        publicVars.scrollOffset -= CONSTANTS.SCROLL_SPEED;
 
         if (publicVars.scrollOffset + publicVars.leavingBuffer.width < 0) {
             generateLandscapeBuffers();
@@ -75,6 +80,14 @@ function generateLandscapeBuffer(buffer) {
     const grass3 = document.getElementById('sprite_grass_3');
     const grass4 = document.getElementById('sprite_grass_4');
     const grassSprites = [grass1, grass2, grass3, grass4];
+
+    const downslope1 = document.getElementById('sprite_grass_downslope_1');
+    const downslope2 = document.getElementById('sprite_grass_downslope_2');
+    const downslopeSprites = [downslope1, downslope2]; 
+
+    const upslope1 = document.getElementById('sprite_grass_upslope_1');
+    const upslope2 = document.getElementById('sprite_grass_upslope_2');
+    const upslopeSprites = [upslope1, upslope2];
     
     const dirt1 = document.getElementById('sprite_dirt_1');
     const dirt2 = document.getElementById('sprite_dirt_2');
@@ -91,25 +104,34 @@ function generateLandscapeBuffer(buffer) {
     const plantSprites = [redFlower1, redFlower2, yellowFlower1, yellowFlower2, violetFlower1, violetFlower2];
     
     for (let i = 0; i < tileColumnsToGenerate; i++) {
-        const grassToDraw = grassSprites[getRandomInt(4)];
-        landscapeBufferRenderQueue.push({ image: grassToDraw, x: i, y: publicVars.groundY });
-        for (let j = 1; j <= 20; j++) {
-            const dirtToDraw = dirtSprites[getRandomInt(4)];
-            landscapeBufferRenderQueue.push({ image: dirtToDraw, x: i, y: publicVars.groundY + j });
-        }
-        const placePlant = Math.random() < 0.1;
-        if (placePlant) {
-            const plantToDraw = plantSprites[getRandomInt(6)];
-            landscapeBufferRenderQueue.push({ image: plantToDraw, x: i, y: publicVars.groundY });
-        }
+        let dirtStartY = publicVars.groundY + 1
         const changeGroundHeight = Math.random() < 0.25;
         if (changeGroundHeight) {
             const stepUp = Math.random() < (0.5 + ((publicVars.groundY - CONSTANTS.GROUND_Y_TARGET) / 50));
             if (stepUp) {
+                const upslopeToDraw = getRandomArrayEntry(upslopeSprites);
+                landscapeBufferRenderQueue.push({ image: upslopeToDraw, x: i, y: publicVars.groundY })
                 publicVars.groundY--;
             } else {
+                dirtStartY++;
                 publicVars.groundY++;
+                const downslopeToDraw = getRandomArrayEntry(downslopeSprites);
+                landscapeBufferRenderQueue.push({ image: downslopeToDraw, x: i, y: publicVars.groundY })
             }
+        } else {
+            const grassToDraw = getRandomArrayEntry(grassSprites);
+            landscapeBufferRenderQueue.push({ image: grassToDraw, x: i, y: publicVars.groundY });
+
+            const placePlant = Math.random() < 0.1;
+            if (placePlant) {
+                const plantToDraw = getRandomArrayEntry(plantSprites);
+                landscapeBufferRenderQueue.push({ image: plantToDraw, x: i, y: publicVars.groundY });
+            }
+        }
+        const dirtRowsToGenerate = ((publicVars.canvas.height / 2) / CONSTANTS.TILE_DIMENSION_IN_PIXELS) - dirtStartY;
+        for (let j = 0; j < dirtRowsToGenerate; j++) {
+            const dirtToDraw = getRandomArrayEntry(dirtSprites);
+            landscapeBufferRenderQueue.push({ image: dirtToDraw, x: i, y: dirtStartY + j });
         }
     }
     
