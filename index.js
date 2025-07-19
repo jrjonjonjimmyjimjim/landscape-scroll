@@ -71,17 +71,25 @@ function generateLandscapeBuffer(buffer) {
     const landscapeBufferRenderQueue = [];
     const tileColumnsToGenerate = Math.ceil(canvas.width) / TILE_DIMENSION_IN_PIXELS;
     
-    const grass_1 = document.getElementById('sprite_grass_1');
-    const grass_2 = document.getElementById('sprite_grass_2');
-    const grass_3 = document.getElementById('sprite_grass_3');
-    const grass_4 = document.getElementById('sprite_grass_4');
-    const grassSprites = [grass_1, grass_2, grass_3, grass_4];
+    const grass1 = document.getElementById('sprite_grass_1');
+    const grass2 = document.getElementById('sprite_grass_2');
+    const grass3 = document.getElementById('sprite_grass_3');
+    const grass4 = document.getElementById('sprite_grass_4');
+    const grassSprites = [grass1, grass2, grass3, grass4];
     
-    const dirt_1 = document.getElementById('sprite_dirt_1');
-    const dirt_2 = document.getElementById('sprite_dirt_2');
-    const dirt_3 = document.getElementById('sprite_dirt_3');
-    const dirt_4 = document.getElementById('sprite_dirt_4');
-    const dirtSprites = [dirt_1, dirt_2, dirt_3, dirt_4];
+    const dirt1 = document.getElementById('sprite_dirt_1');
+    const dirt2 = document.getElementById('sprite_dirt_2');
+    const dirt3 = document.getElementById('sprite_dirt_3');
+    const dirt4 = document.getElementById('sprite_dirt_4');
+    const dirtSprites = [dirt1, dirt2, dirt3, dirt4];
+
+    const redFlower1 = document.getElementById('sprite_flower_red_1');
+    const redFlower2 = document.getElementById('sprite_flower_red_2');
+    const yellowFlower1 = document.getElementById('sprite_flower_yellow_1');
+    const yellowFlower2 = document.getElementById('sprite_flower_yellow_2');
+    const blueFlower1 = document.getElementById('sprite_flower_blue_1');
+    const blueFlower2 = document.getElementById('sprite_flower_blue_2');
+    const plantSprites = [redFlower1, redFlower2, yellowFlower1, yellowFlower2, blueFlower1, blueFlower2];
     
     for (let i = 0; i < tileColumnsToGenerate; i++) {
         const grassToDraw = grassSprites[getRandomInt(4)];
@@ -89,6 +97,11 @@ function generateLandscapeBuffer(buffer) {
         for (let j = 1; j <= 20; j++) {
             const dirtToDraw = dirtSprites[getRandomInt(4)];
             landscapeBufferRenderQueue.push({ image: dirtToDraw, x: i, y: groundY + j });
+        }
+        const placePlant = Math.random() < 0.1;
+        if (placePlant) {
+            const plantToDraw = plantSprites[getRandomInt(6)];
+            landscapeBufferRenderQueue.push({ image: plantToDraw, x: i, y: groundY });
         }
         const changeGroundHeight = Math.random() < 0.25;
         if (changeGroundHeight) {
