@@ -1,75 +1,74 @@
-const FPS_TARGET = 60;
-const FPS_INTERVAL = 1000 / FPS_TARGET;
+const CONSTANTS = {
+    FPS_TARGET: 60,
+    TILE_DIMENSION_IN_PIXELS: 32,
+    GROUND_Y_TARGET: 8,
+};
 
-const TILE_DIMENSION_IN_PIXELS = 32;
-const GROUND_Y_TARGET = 10;
+CONSTANTS.FPS_INTERVAL = 1000 / CONSTANTS.FPS_TARGET;
 
-// Get the canvas element and its 2D rendering context
-const canvas = document.getElementById('backgroundCanvas');
-const ctx = canvas.getContext('2d');
-
-let animationFrameId; // To store the requestAnimationFrame ID for cleanup
-let previousRenderTime;
-
-let leavingBuffer = null;
-let enteringBuffer = null;
-let groundY = GROUND_Y_TARGET;
-let scrollOffset = -50;
+const publicVars = {
+    canvas: document.getElementById('backgroundCanvas'),
+    canvasContext: document.getElementById('backgroundCanvas').getContext('2d', { alpha: false }),
+    animationFrameId: undefined, // To store the requestAnimationFrame ID for cleanup
+    previousRenderTime: undefined,
+    leavingBuffer: undefined,
+    enteringBuffer: undefined,
+    groundY: undefined,
+    scrollOffset: undefined,
+};
 
 function getRandomInt(max) {
   return Math.floor(Math.random() * max);
 }
 
 function drawCanvasContent() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    publicVars.canvasContext.clearRect(0, 0, publicVars.canvas.width, publicVars.canvas.height);
     
-    // Create a linear gradient for a subtle background effect
-    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-    gradient.addColorStop(0, '#e0f2f7'); // Light blue
-    gradient.addColorStop(0.5, '#c8e6c9'); // Light green
-    gradient.addColorStop(1, '#bbdefb'); // Another light blue
+    const gradient = publicVars.canvasContext.createLinearGradient(0, 0, 0, publicVars.canvas.height);
+    gradient.addColorStop(0, '#c8f3ffff');
+    gradient.addColorStop(1, '#63b9ffff');
     
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    publicVars.canvasContext.fillStyle = gradient;
+    publicVars.canvasContext.fillRect(0, 0, publicVars.canvas.width, publicVars.canvas.height);
     
-    ctx.drawImage(leavingBuffer, scrollOffset, 0);
-    ctx.drawImage(enteringBuffer, scrollOffset + leavingBuffer.width, 0);
+    publicVars.canvasContext.drawImage(publicVars.leavingBuffer, publicVars.scrollOffset, 0);
+    publicVars.canvasContext.drawImage(publicVars.enteringBuffer, publicVars.scrollOffset + publicVars.leavingBuffer.width, 0);
 }
 
 function animate() {
     const currentRenderTime = Date.now();
-    const elapsedRenderTime = currentRenderTime - previousRenderTime;
+    const elapsedRenderTime = currentRenderTime - publicVars.previousRenderTime;
     
-    if (elapsedRenderTime > FPS_INTERVAL) {
-        previousRenderTime = currentRenderTime - (elapsedRenderTime % FPS_INTERVAL);
+    if (elapsedRenderTime > CONSTANTS.FPS_INTERVAL) {
+        publicVars.previousRenderTime = currentRenderTime - (elapsedRenderTime % CONSTANTS.FPS_INTERVAL);
         drawCanvasContent();
-        scrollOffset--;
+        publicVars.scrollOffset--;
 
-        if (scrollOffset + enteringBuffer.width < 0) {
+        if (publicVars.scrollOffset + publicVars.leavingBuffer.width < 0) {
             generateLandscapeBuffers();
-            scrollOffset = 0;
+            publicVars.scrollOffset = 0;
         }
     }
-    animationFrameId = requestAnimationFrame(animate);
+    publicVars.animationFrameId = requestAnimationFrame(animate);
 }
 
 function generateLandscapeBuffers() {
-    if (leavingBuffer !== null) {
-        generateLandscapeBuffer(leavingBuffer);
-        const newEnteringBuffer = leavingBuffer;
-        leavingBuffer = enteringBuffer;
-        enteringBuffer = newEnteringBuffer;
+    if (publicVars.leavingBuffer !== null) {
+        generateLandscapeBuffer(publicVars.leavingBuffer);
+        const newEnteringBuffer = publicVars.leavingBuffer;
+        publicVars.leavingBuffer = publicVars.enteringBuffer;
+        publicVars.enteringBuffer = newEnteringBuffer;
         return;
     }
-    generateLandscapeBuffer(canvas.landscapeBuffer1);
-    generateLandscapeBuffer(canvas.landscapeBuffer2);
-    leavingBuffer = canvas.landscapeBuffer1;
-    enteringBuffer = canvas.landscapeBuffer2;
+    generateLandscapeBuffer(publicVars.canvas.landscapeBuffer1);
+    generateLandscapeBuffer(publicVars.canvas.landscapeBuffer2);
+    publicVars.leavingBuffer = publicVars.canvas.landscapeBuffer1;
+    publicVars.enteringBuffer = publicVars.canvas.landscapeBuffer2;
 }
 
 function generateLandscapeBuffer(buffer) {
     const landscapeBufferRenderQueue = [];
-    const tileColumnsToGenerate = Math.ceil(canvas.width) / TILE_DIMENSION_IN_PIXELS;
+    const tileColumnsToGenerate = buffer.width / CONSTANTS.TILE_DIMENSION_IN_PIXELS;
     
     const grass1 = document.getElementById('sprite_grass_1');
     const grass2 = document.getElementById('sprite_grass_2');
@@ -87,61 +86,83 @@ function generateLandscapeBuffer(buffer) {
     const redFlower2 = document.getElementById('sprite_flower_red_2');
     const yellowFlower1 = document.getElementById('sprite_flower_yellow_1');
     const yellowFlower2 = document.getElementById('sprite_flower_yellow_2');
-    const blueFlower1 = document.getElementById('sprite_flower_blue_1');
-    const blueFlower2 = document.getElementById('sprite_flower_blue_2');
-    const plantSprites = [redFlower1, redFlower2, yellowFlower1, yellowFlower2, blueFlower1, blueFlower2];
+    const violetFlower1 = document.getElementById('sprite_flower_violet_1');
+    const violetFlower2 = document.getElementById('sprite_flower_violet_2');
+    const plantSprites = [redFlower1, redFlower2, yellowFlower1, yellowFlower2, violetFlower1, violetFlower2];
     
     for (let i = 0; i < tileColumnsToGenerate; i++) {
         const grassToDraw = grassSprites[getRandomInt(4)];
-        landscapeBufferRenderQueue.push({ image: grassToDraw, x: i, y: groundY });
+        landscapeBufferRenderQueue.push({ image: grassToDraw, x: i, y: publicVars.groundY });
         for (let j = 1; j <= 20; j++) {
             const dirtToDraw = dirtSprites[getRandomInt(4)];
-            landscapeBufferRenderQueue.push({ image: dirtToDraw, x: i, y: groundY + j });
+            landscapeBufferRenderQueue.push({ image: dirtToDraw, x: i, y: publicVars.groundY + j });
         }
         const placePlant = Math.random() < 0.1;
         if (placePlant) {
             const plantToDraw = plantSprites[getRandomInt(6)];
-            landscapeBufferRenderQueue.push({ image: plantToDraw, x: i, y: groundY });
+            landscapeBufferRenderQueue.push({ image: plantToDraw, x: i, y: publicVars.groundY });
         }
         const changeGroundHeight = Math.random() < 0.25;
         if (changeGroundHeight) {
-            const stepUp = Math.random() < (0.5 + ((groundY - GROUND_Y_TARGET) / 50));
+            const stepUp = Math.random() < (0.5 + ((publicVars.groundY - CONSTANTS.GROUND_Y_TARGET) / 50));
             if (stepUp) {
-                groundY--;
+                publicVars.groundY--;
             } else {
-                groundY++;
+                publicVars.groundY++;
             }
         }
     }
     
     const bufferContext = buffer.getContext('2d');
-    bufferContext.clearRect(0, 0, canvas.width, canvas.height);
+    bufferContext.clearRect(0, 0, buffer.width, buffer.height);
+    const bufferHalfHeight = Math.floor(buffer.height / 2);
     for (const sprite of landscapeBufferRenderQueue) {
-        bufferContext.drawImage(sprite.image, (sprite.x * 32), (sprite.y * 32) + (canvas.height / 2));
+        bufferContext.drawImage(sprite.image, (sprite.x * 32), (sprite.y * 32) + bufferHalfHeight);
     }
 }
 
-function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    drawCanvasContent();
+function restartRender() {
+    publicVars.canvas.width = window.innerWidth;
+    publicVars.canvas.height = window.innerHeight;
+
+    publicVars.leavingBuffer = null;
+    publicVars.enteringBuffer = null;
+    publicVars.groundY = CONSTANTS.GROUND_Y_TARGET;
+    publicVars.scrollOffset = -50;
+    const minimumBufferWidth = Math.ceil(publicVars.canvas.width / 32) * 32;
+    publicVars.canvas.landscapeBuffer1 = new OffscreenCanvas(minimumBufferWidth, publicVars.canvas.height);
+    publicVars.canvas.landscapeBuffer2 = new OffscreenCanvas(minimumBufferWidth, publicVars.canvas.height);
+    generateLandscapeBuffers();
+    publicVars.previousRenderTime = Date.now();
 }
 
 window.onload = function() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    // TODO: These canvases should snap width to next multiple of 32 so they don't overlap
-    canvas.landscapeBuffer1 = new OffscreenCanvas(canvas.width, canvas.height);
-    canvas.landscapeBuffer2 = new OffscreenCanvas(canvas.width, canvas.height);
-    generateLandscapeBuffers();
-    
-    previousRenderTime = Date.now();
+    restartRender();
     animate();
 };
 
-window.addEventListener('resize', resizeCanvas);
+const debouncedRender = debounce(restartRender, 500);
+
+window.addEventListener('resize', () => {
+    debouncedRender();
+});
+
+// Stolen from Google Gemini
+// But they probably stole it from some random github repo so fair's fair
+function debounce(func, delay) {
+  let timeoutId;
+
+  return function(...args) {
+    const context = this;
+
+    clearTimeout(timeoutId);
+
+    timeoutId = setTimeout(() => {
+      func.apply(context, args);
+    }, delay);
+  };
+}
 
 window.addEventListener('beforeunload', () => {
-    cancelAnimationFrame(animationFrameId);
+    cancelAnimationFrame(publicVars.animationFrameId);
 });
