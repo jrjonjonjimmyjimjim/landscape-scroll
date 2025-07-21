@@ -88,7 +88,7 @@ function generateLandscapeBuffer(buffer) {
     const upslopeSprites = loadSpriteArray(['sprite_grass_upslope_1', 'sprite_grass_upslope_2']);
     const dirtSprites = loadSpriteArray(['sprite_dirt_1', 'sprite_dirt_2', 'sprite_dirt_3', 'sprite_dirt_4']);
     const plantSprites = loadSpriteArray(['sprite_flower_red_1', 'sprite_flower_red_2', 'sprite_flower_yellow_1', 'sprite_flower_yellow_2', 'sprite_flower_violet_1', 'sprite_flower_violet_2']);
-    const largePlantSprites = loadSpriteArray(['sprite_tree_dead_1', 'sprite_tree_dead_2']); // 4 tiles wide
+    const largePlantSprites = loadSpriteArray(['sprite_tree_1', 'sprite_tree_2', 'sprite_tree_dead_1', 'sprite_tree_dead_2']); // 4 tiles wide
     
     let emptyGrassRequested = 0;
     for (let i = 0; i < tileColumnsToGenerate; i++) {
