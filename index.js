@@ -98,7 +98,7 @@ function generateLandscapeBuffers() {
 
 function generateLandscapeBuffer(buffer) {
     const landscapeBufferRenderQueue = [];
-    const tileColumnsToGenerate = buffer.width / CONSTANTS.TILE_DIMENSION_IN_PIXELS;
+    const tileColumnsToGenerate = Math.ceil(buffer.width / CONSTANTS.TILE_DIMENSION_IN_PIXELS);
 
     const grassSprites = loadSpriteArray(['sprite_grass_1', 'sprite_grass_2', 'sprite_grass_3', 'sprite_grass_4']);
     const downslopeSprites = loadSpriteArray(['sprite_grass_downslope_1', 'sprite_grass_downslope_2']);
@@ -107,6 +107,8 @@ function generateLandscapeBuffer(buffer) {
     const flowerSprites = loadSpriteArray(['sprite_flower_red_1', 'sprite_flower_red_2', 'sprite_flower_yellow_1', 'sprite_flower_yellow_2', 'sprite_flower_violet_1', 'sprite_flower_violet_2']);
     const treeSprites = loadSpriteArray(['sprite_tree_1', 'sprite_tree_2']);
     const deadTreeSprites = loadSpriteArray(['sprite_tree_dead_1', 'sprite_tree_dead_2']);
+    const largePlantSprites = loadSpriteArray(['sprite_berry_bush_blue', 'sprite_berry_bush_red']);
+    const boulderSprites = loadSpriteArray(['sprite_boulder_1', 'sprite_boulder_2']);
     
     function _addGrass({ xStart, xEnd, y }) {
         for (let x = xStart; x < xEnd; x++) {
@@ -126,17 +128,25 @@ function generateLandscapeBuffer(buffer) {
     }
 
     const LANDSCAPE_OBJECTS = [
-        { // Flowers
+        {
             weight: 0.4,
             entry: flowerSprites,
         },
-        { // Live trees
-            weight: 0.4,
+        {
+            weight: 0.2,
             entry: treeSprites,
         },
-        { // Dead trees
+        {
             weight: 0.2,
+            entry: largePlantSprites,
+        },
+        {
+            weight: 0.1,
             entry: deadTreeSprites,
+        },
+        {
+            weight: 0.1,
+            entry: boulderSprites,
         }
     ]
 
@@ -179,8 +189,8 @@ function generateLandscapeBuffer(buffer) {
                 const objectToDraw = getRandomArrayEntry(getWeightedArrayEntry(LANDSCAPE_OBJECTS));
                 const objectTileWidth = objectToDraw.width / CONSTANTS.TILE_DIMENSION_IN_PIXELS;
                 if (x + objectTileWidth >= tileColumnsToGenerate) {
-                    _addGrass({ xStart: x, xEnd: x + objectTileWidth, y: publicVars.groundY });
-                    _addDirt({ xStart: x, xEnd: x + objectTileWidth, yStart: publicVars.groundY + 1 });
+                    _addGrass({ xStart: x, xEnd: x + 1, y: publicVars.groundY });
+                    _addDirt({ xStart: x, xEnd: x + 1, yStart: publicVars.groundY + 1 });
                     return 1;
                 }
                 landscapeBufferRenderQueue.push({ image: objectToDraw, x, y: publicVars.groundY })
@@ -210,7 +220,7 @@ function generateLandscapeBuffer(buffer) {
     const bufferHalfHeight = Math.floor(buffer.height / 2);
     for (const sprite of landscapeBufferRenderQueue) {
         const spriteTileHeight = sprite.image.height / CONSTANTS.TILE_DIMENSION_IN_PIXELS;
-        bufferContext.drawImage(sprite.image, (sprite.x * 32), ((sprite.y - spriteTileHeight) * 32) + bufferHalfHeight);
+        bufferContext.drawImage(sprite.image, (sprite.x * CONSTANTS.TILE_DIMENSION_IN_PIXELS), ((sprite.y - spriteTileHeight) * CONSTANTS.TILE_DIMENSION_IN_PIXELS) + bufferHalfHeight);
     }
 }
 
@@ -222,7 +232,7 @@ function restartRender() {
     publicVars.enteringBuffer = null;
     publicVars.groundY = CONSTANTS.GROUND_Y_TARGET;
     publicVars.scrollOffset = -50;
-    const minimumBufferWidth = Math.ceil(publicVars.canvas.width / 32) * 32;
+    const minimumBufferWidth = Math.ceil(publicVars.canvas.width / CONSTANTS.TILE_DIMENSION_IN_PIXELS) * CONSTANTS.TILE_DIMENSION_IN_PIXELS;
     publicVars.canvas.landscapeBuffer1 = new OffscreenCanvas(minimumBufferWidth, publicVars.canvas.height);
     publicVars.canvas.landscapeBuffer2 = new OffscreenCanvas(minimumBufferWidth, publicVars.canvas.height);
     generateLandscapeBuffers();
