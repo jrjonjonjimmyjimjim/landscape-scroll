@@ -106,9 +106,10 @@ function generateLandscapeBuffer(buffer) {
     const dirtSprites = loadSpriteArray(['sprite_dirt_1', 'sprite_dirt_2', 'sprite_dirt_3', 'sprite_dirt_4']);
     const flowerSprites = loadSpriteArray(['sprite_flower_red_1', 'sprite_flower_red_2', 'sprite_flower_yellow_1', 'sprite_flower_yellow_2', 'sprite_flower_violet_1', 'sprite_flower_violet_2']);
     const treeSprites = loadSpriteArray(['sprite_tree_1', 'sprite_tree_2']);
-    const deadTreeSprites = loadSpriteArray(['sprite_tree_dead_1', 'sprite_tree_dead_2']);
-    const largePlantSprites = loadSpriteArray(['sprite_berry_bush_blue', 'sprite_berry_bush_red']);
+    const deadTreeSprites = loadSpriteArray(['sprite_tree_dead_1', 'sprite_tree_dead_2', 'sprite_tree_dead_trunk']);
+    const largePlantSprites = loadSpriteArray(['sprite_berry_bush_blue', 'sprite_berry_bush_red', 'sprite_cattails']);
     const boulderSprites = loadSpriteArray(['sprite_boulder_1', 'sprite_boulder_2']);
+    const rareObjectSprites = loadSpriteArray(['sprite_tent', 'sprite_companion_cube']);
     
     function _addGrass({ xStart, xEnd, y }) {
         for (let x = xStart; x < xEnd; x++) {
@@ -145,9 +146,13 @@ function generateLandscapeBuffer(buffer) {
             entry: deadTreeSprites,
         },
         {
-            weight: 0.1,
+            weight: 0.09,
             entry: boulderSprites,
-        }
+        },
+        {
+            weight: 0.01,
+            entry: rareObjectSprites,
+        },
     ]
 
     const ACTIONS = [
