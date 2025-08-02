@@ -46,12 +46,7 @@ function getWeightedArrayEntry(array) {
 function loadSpriteArray(spriteIds) {
     const spriteArray = [];
     for (let i = 0; i < spriteIds.length; i++) {
-        const image = document.getElementById(spriteIds[i]);
-        spriteArray.push({
-            image,
-            tileWidth: image.width / CONSTANTS.TILE_DIMENSION_IN_PIXELS,
-            tileHeight: image.height / CONSTANTS.TILE_DIMENSION_IN_PIXELS,
-        });
+        spriteArray.push(document.getElementById(spriteIds[i]))
     }
     return spriteArray;
 }
@@ -121,9 +116,9 @@ function generateLandscapeBuffer(buffer) {
     }
 
     function _addDirt({ xStart, xEnd, yStart }) {
-        const dirtRowsToGenerate = ((publicVars.canvas.height / 2) / CONSTANTS.TILE_DIMENSION_IN_PIXELS) - yStart;
+        const dirtRowsToGenerate = Math.ceil(((publicVars.canvas.height / 2) / CONSTANTS.TILE_DIMENSION_IN_PIXELS) - yStart);
         for (let x = xStart; x < xEnd; x++) {
-            for (let i = 0; i < dirtRowsToGenerate; i++) {
+            for (let i = 0; i <= dirtRowsToGenerate; i++) {
                 const dirtToDraw = getRandomArrayEntry(dirtSprites);
                 landscapeBufferRenderQueue.push({ image: dirtToDraw, x, y: yStart + i });
             }
@@ -132,15 +127,15 @@ function generateLandscapeBuffer(buffer) {
 
     const LANDSCAPE_OBJECTS = [
         { // Flowers
-            weight: 0.25,
+            weight: 0.4,
             entry: flowerSprites,
         },
         { // Live trees
-            weight: 0.25,
+            weight: 0.4,
             entry: treeSprites,
         },
         { // Dead trees
-            weight: 0.125,
+            weight: 0.2,
             entry: deadTreeSprites,
         }
     ]
@@ -151,15 +146,14 @@ function generateLandscapeBuffer(buffer) {
             entry: ({ x }) => {
                 const upslopeToDraw = getRandomArrayEntry(upslopeSprites);
                 landscapeBufferRenderQueue.push({ image: upslopeToDraw, x, y: publicVars.groundY })
-                publicVars.groundY--;
                 _addDirt({ xStart: x, xEnd: x + 1, yStart: publicVars.groundY + 1 });
+                publicVars.groundY--;
                 return 1;
             },
         },
         { // Step down
             weight: 0.125,
             entry: ({ x }) => {
-                dirtStartY++;
                 publicVars.groundY++;
                 const downslopeToDraw = getRandomArrayEntry(downslopeSprites);
                 landscapeBufferRenderQueue.push({ image: downslopeToDraw, x, y: publicVars.groundY })
@@ -173,12 +167,22 @@ function generateLandscapeBuffer(buffer) {
                 const objectToDraw = getRandomArrayEntry(getWeightedArrayEntry(LANDSCAPE_OBJECTS));
                 const objectTileWidth = objectToDraw.width / CONSTANTS.TILE_DIMENSION_IN_PIXELS;
                 if (x + objectTileWidth >= tileColumnsToGenerate) {
+                    _addGrass({ xStart: x, xEnd: x + objectTileWidth, y: publicVars.groundY });
+                    _addDirt({ xStart: x, xEnd: x + objectTileWidth, yStart: publicVars.groundY + 1 });
                     return 1;
                 }
                 landscapeBufferRenderQueue.push({ image: objectToDraw, x, y: publicVars.groundY })
                 _addGrass({ xStart: x, xEnd: x + objectTileWidth, y: publicVars.groundY });
                 _addDirt({ xStart: x, xEnd: x + objectTileWidth, yStart: publicVars.groundY + 1 });
                 return objectTileWidth;
+            },
+        },
+        { // Plant grass in remaining cases
+            weight: 1,
+            entry: ({ x }) => {
+                _addGrass({ xStart: x, xEnd: x + 1, y: publicVars.groundY });
+                _addDirt({ xStart: x, xEnd: x + 1, yStart: publicVars.groundY + 1 });
+                return 1;
             },
         }
     ]
@@ -194,7 +198,7 @@ function generateLandscapeBuffer(buffer) {
     const bufferHalfHeight = Math.floor(buffer.height / 2);
     for (const sprite of landscapeBufferRenderQueue) {
         const spriteTileHeight = sprite.image.height / CONSTANTS.TILE_DIMENSION_IN_PIXELS;
-        bufferContext.drawImage(sprite.image, (sprite.x * 32), (sprite.y * 32) + bufferHalfHeight - spriteTileHeight);
+        bufferContext.drawImage(sprite.image, (sprite.x * 32), ((sprite.y - spriteTileHeight) * 32) + bufferHalfHeight);
     }
 }
 
