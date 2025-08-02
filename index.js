@@ -26,10 +26,32 @@ function getRandomArrayEntry(array) {
     return array[getRandomInt(array.length)];
 }
 
+/**
+ * 
+ * @param {Array<{weight: number, entry: any}>} array 
+ * @returns any
+*/
+function getWeightedArrayEntry(array) {
+    const randomDecimal = Math.random();
+    let accumulatedDecimal = 0;
+    for (let i = 0; i < array.length; i++) {
+        const currentEntry = array[i];
+        accumulatedDecimal += currentEntry.weight;
+        if (accumulatedDecimal > randomDecimal) {
+            return currentEntry.entry;
+        }
+    }
+}
+
 function loadSpriteArray(spriteIds) {
     const spriteArray = [];
     for (let i = 0; i < spriteIds.length; i++) {
-        spriteArray.push(document.getElementById(spriteIds[i]));
+        const image = document.getElementById(spriteIds[i]);
+        spriteArray.push({
+            image,
+            tileWidth: image.width / CONSTANTS.TILE_DIMENSION_IN_PIXELS,
+            tileHeight: image.height / CONSTANTS.TILE_DIMENSION_IN_PIXELS,
+        });
     }
     return spriteArray;
 }
@@ -87,58 +109,92 @@ function generateLandscapeBuffer(buffer) {
     const downslopeSprites = loadSpriteArray(['sprite_grass_downslope_1', 'sprite_grass_downslope_2']);
     const upslopeSprites = loadSpriteArray(['sprite_grass_upslope_1', 'sprite_grass_upslope_2']);
     const dirtSprites = loadSpriteArray(['sprite_dirt_1', 'sprite_dirt_2', 'sprite_dirt_3', 'sprite_dirt_4']);
-    const plantSprites = loadSpriteArray(['sprite_flower_red_1', 'sprite_flower_red_2', 'sprite_flower_yellow_1', 'sprite_flower_yellow_2', 'sprite_flower_violet_1', 'sprite_flower_violet_2']);
-    const largePlantSprites = loadSpriteArray(['sprite_tree_1', 'sprite_tree_2', 'sprite_tree_dead_1', 'sprite_tree_dead_2']); // 4 tiles wide
+    const flowerSprites = loadSpriteArray(['sprite_flower_red_1', 'sprite_flower_red_2', 'sprite_flower_yellow_1', 'sprite_flower_yellow_2', 'sprite_flower_violet_1', 'sprite_flower_violet_2']);
+    const treeSprites = loadSpriteArray(['sprite_tree_1', 'sprite_tree_2']);
+    const deadTreeSprites = loadSpriteArray(['sprite_tree_dead_1', 'sprite_tree_dead_2']);
     
-    let emptyGrassRequested = 0;
-    for (let i = 0; i < tileColumnsToGenerate; i++) {
-        let dirtStartY = publicVars.groundY + 1;
-        const changeGroundHeight = Math.random() < 0.25;
-        // TODO: There's likely a more elegant way to force flat ground in subsequent loops
-        if (emptyGrassRequested === 0 && changeGroundHeight) {
-            const stepUp = Math.random() < (0.5 + ((publicVars.groundY - CONSTANTS.GROUND_Y_TARGET) / 50));
-            if (stepUp) {
+    function _addGrass({ xStart, xEnd, y }) {
+        for (let x = xStart; x < xEnd; x++) {
+            const grassToDraw = getRandomArrayEntry(grassSprites);
+            landscapeBufferRenderQueue.push({ image: grassToDraw, x, y });
+        }
+    }
+
+    function _addDirt({ xStart, xEnd, yStart }) {
+        const dirtRowsToGenerate = ((publicVars.canvas.height / 2) / CONSTANTS.TILE_DIMENSION_IN_PIXELS) - yStart;
+        for (let x = xStart; x < xEnd; x++) {
+            for (let i = 0; i < dirtRowsToGenerate; i++) {
+                const dirtToDraw = getRandomArrayEntry(dirtSprites);
+                landscapeBufferRenderQueue.push({ image: dirtToDraw, x, y: yStart + i });
+            }
+        }
+    }
+
+    const LANDSCAPE_OBJECTS = [
+        { // Flowers
+            weight: 0.25,
+            entry: flowerSprites,
+        },
+        { // Live trees
+            weight: 0.25,
+            entry: treeSprites,
+        },
+        { // Dead trees
+            weight: 0.125,
+            entry: deadTreeSprites,
+        }
+    ]
+
+    const ACTIONS = [
+        { // Step up
+            weight: 0.125,
+            entry: ({ x }) => {
                 const upslopeToDraw = getRandomArrayEntry(upslopeSprites);
-                landscapeBufferRenderQueue.push({ image: upslopeToDraw, x: i, y: publicVars.groundY })
+                landscapeBufferRenderQueue.push({ image: upslopeToDraw, x, y: publicVars.groundY })
                 publicVars.groundY--;
-            } else {
+                _addDirt({ xStart: x, xEnd: x + 1, yStart: publicVars.groundY + 1 });
+                return 1;
+            },
+        },
+        { // Step down
+            weight: 0.125,
+            entry: ({ x }) => {
                 dirtStartY++;
                 publicVars.groundY++;
                 const downslopeToDraw = getRandomArrayEntry(downslopeSprites);
-                landscapeBufferRenderQueue.push({ image: downslopeToDraw, x: i, y: publicVars.groundY })
-            }
-        } else {
-            const placeLargePlant = Math.random() < 0.1;
-            if (emptyGrassRequested === 0 && tileColumnsToGenerate - i > 4 && placeLargePlant) {
-                const largePlantToDraw = getRandomArrayEntry(largePlantSprites);
-                landscapeBufferRenderQueue.push({ image: largePlantToDraw, x: i, y: publicVars.groundY - 15 });
-                emptyGrassRequested = 4;
-            }
-            const grassToDraw = getRandomArrayEntry(grassSprites);
-            landscapeBufferRenderQueue.push({ image: grassToDraw, x: i, y: publicVars.groundY });
+                landscapeBufferRenderQueue.push({ image: downslopeToDraw, x, y: publicVars.groundY })
+                _addDirt({ xStart: x, xEnd: x + 1, yStart: publicVars.groundY + 1 });
+                return 1;
+            },
+        },
+        { // Plant an object
+            weight: 0.25,
+            entry: ({ x }) => {
+                const objectToDraw = getRandomArrayEntry(getWeightedArrayEntry(LANDSCAPE_OBJECTS));
+                const objectTileWidth = objectToDraw.width / CONSTANTS.TILE_DIMENSION_IN_PIXELS;
+                if (x + objectTileWidth >= tileColumnsToGenerate) {
+                    return 1;
+                }
+                landscapeBufferRenderQueue.push({ image: objectToDraw, x, y: publicVars.groundY })
+                _addGrass({ xStart: x, xEnd: x + objectTileWidth, y: publicVars.groundY });
+                _addDirt({ xStart: x, xEnd: x + objectTileWidth, yStart: publicVars.groundY + 1 });
+                return objectTileWidth;
+            },
+        }
+    ]
 
-            const placePlant = Math.random() < 0.1;
-            if (emptyGrassRequested === 0 && placePlant) {
-                const plantToDraw = getRandomArrayEntry(plantSprites);
-                landscapeBufferRenderQueue.push({ image: plantToDraw, x: i, y: publicVars.groundY });
-            }
-        }
-        const dirtRowsToGenerate = ((publicVars.canvas.height / 2) / CONSTANTS.TILE_DIMENSION_IN_PIXELS) - dirtStartY;
-        for (let j = 0; j < dirtRowsToGenerate; j++) {
-            const dirtToDraw = getRandomArrayEntry(dirtSprites);
-            landscapeBufferRenderQueue.push({ image: dirtToDraw, x: i, y: dirtStartY + j });
-        }
-
-        if (emptyGrassRequested > 0) {
-            emptyGrassRequested -= 1;
-        }
+    let currentBufferX = 0;
+    while (currentBufferX < tileColumnsToGenerate) {
+        const columnsGenerated = (getWeightedArrayEntry(ACTIONS))({ x: currentBufferX });
+        currentBufferX += columnsGenerated;
     }
     
     const bufferContext = buffer.getContext('2d');
     bufferContext.clearRect(0, 0, buffer.width, buffer.height);
     const bufferHalfHeight = Math.floor(buffer.height / 2);
     for (const sprite of landscapeBufferRenderQueue) {
-        bufferContext.drawImage(sprite.image, (sprite.x * 32), (sprite.y * 32) + bufferHalfHeight);
+        const spriteTileHeight = sprite.image.height / CONSTANTS.TILE_DIMENSION_IN_PIXELS;
+        bufferContext.drawImage(sprite.image, (sprite.x * 32), (sprite.y * 32) + bufferHalfHeight - spriteTileHeight);
     }
 }
 
