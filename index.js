@@ -144,6 +144,12 @@ function generateLandscapeBuffer(buffer) {
         { // Step up
             weight: 0.125,
             entry: ({ x }) => {
+                const cancelStep = Math.random() > (1 + ((publicVars.groundY - CONSTANTS.GROUND_Y_TARGET) / 10));
+                if (cancelStep) {
+                    _addGrass({ xStart: x, xEnd: x + 1, y: publicVars.groundY });
+                    _addDirt({ xStart: x, xEnd: x + 1, yStart: publicVars.groundY + 1 });
+                    return 1;
+                }
                 const upslopeToDraw = getRandomArrayEntry(upslopeSprites);
                 landscapeBufferRenderQueue.push({ image: upslopeToDraw, x, y: publicVars.groundY })
                 _addDirt({ xStart: x, xEnd: x + 1, yStart: publicVars.groundY + 1 });
@@ -154,6 +160,12 @@ function generateLandscapeBuffer(buffer) {
         { // Step down
             weight: 0.125,
             entry: ({ x }) => {
+                const cancelStep = Math.random() < ((publicVars.groundY - CONSTANTS.GROUND_Y_TARGET) / 10);
+                if (cancelStep) {
+                    _addGrass({ xStart: x, xEnd: x + 1, y: publicVars.groundY });
+                    _addDirt({ xStart: x, xEnd: x + 1, yStart: publicVars.groundY + 1 });
+                    return 1;
+                }
                 publicVars.groundY++;
                 const downslopeToDraw = getRandomArrayEntry(downslopeSprites);
                 landscapeBufferRenderQueue.push({ image: downslopeToDraw, x, y: publicVars.groundY })
